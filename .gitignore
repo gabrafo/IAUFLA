@@ -1,1 +1,37 @@
-/.venv
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+build/
+dist/
+
+# Test and lint caches
+.pytest_cache/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Quarto and generated artifacts
+.quarto/
+.quarto-cache/
+_freeze/
+*.quarto_ipynb
+*.quarto_ipynb_*
+*_files/
+
+# Logs
+*.log
+
+# Editor/OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

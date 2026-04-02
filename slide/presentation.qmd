@@ -1,0 +1,316 @@
+---
+title: "Algoritmo KNN"
+subtitle: "Comparação entre implementação manual e Scikit-Learn"
+format:
+    revealjs:
+        theme: default
+        css: styles.css
+        slide-number: true
+        transition: fade
+        center: false
+jupyter: python3
+---
+
+```{python}
+#| echo: false
+#| warning: false
+
+import math
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, recall_score
+
+class Example:
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+
+def euclidean_distance(p1, p2):
+    soma = sum((p1[i] - p2[i]) ** 2 for i in range(len(p1)))
+    return math.sqrt(soma)
+
+def knn(K: int, data: list, new_example: Example):
+    distances = []
+    for example in data:
+        dist = euclidean_distance(example.X, new_example.X)
+        distances.append([dist, example.y])
+    distances.sort(key=lambda x: x[0])
+    neighbors = distances[:K]
+    counter = {}
+    for dist, examined_class in neighbors:
+        counter[examined_class] = counter.get(examined_class, 0) + 1
+    predicted_class = max(counter, key=lambda c: counter[c])
+    return predicted_class
+
+# Preparação dos dados
+iris = load_iris()
+X = iris.data
+y = iris.target
+target_names = iris.target_names
+y_named = [target_names[i] for i in y]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y_named, test_size=0.2, random_state=42, stratify=y_named
+)
+
+train_data = [Example(x, label) for x, label in zip(X_train, y_train)]
+test_data = [Example(x, label) for x, label in zip(X_test, y_test)]
+
+def plot_confusion_matrices(k):
+    y_pred_manual = [knn(k, train_data, example) for example in test_data]
+    
+    knn_sklearn = KNeighborsClassifier(n_neighbors=k, metric='euclidean')
+    knn_sklearn.fit(X_train, y_train)
+    y_pred_sklearn = knn_sklearn.predict(X_test)
+    
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    
+    cm_manual = confusion_matrix(y_test, y_pred_manual, labels=target_names)
+    sns.heatmap(cm_manual, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=target_names, yticklabels=target_names, ax=axes[0])
+    axes[0].set_title(f"Manual - K={k}")
+    axes[0].set_xlabel("Predito")
+    axes[0].set_ylabel("Real")
+    
+    cm_sklearn = confusion_matrix(y_test, y_pred_sklearn, labels=target_names)
+    sns.heatmap(cm_sklearn, annot=True, fmt='d', cmap='Greens', 
+                xticklabels=target_names, yticklabels=target_names, ax=axes[1])
+    axes[1].set_title(f"Sklearn - K={k}")
+    axes[1].set_xlabel("Predito")
+    axes[1].set_ylabel("Real")
+    
+    plt.tight_layout()
+    plt.show()
+
+def calculate_metrics(k_values):
+    rows = []
+    for k in k_values:
+        y_pred_manual = [knn(k, train_data, example) for example in test_data]
+
+        knn_sklearn = KNeighborsClassifier(n_neighbors=k, metric='euclidean')
+        knn_sklearn.fit(X_train, y_train)
+        y_pred_sklearn = knn_sklearn.predict(X_test)
+
+        rows.append({
+            "K": k,
+            "Acuracia Manual": accuracy_score(y_test, y_pred_manual),
+            "Acuracia Sklearn": accuracy_score(y_test, y_pred_sklearn),
+            "Revocacao Manual": recall_score(y_test, y_pred_manual, average='macro', zero_division=0),
+            "Revocacao Sklearn": recall_score(y_test, y_pred_sklearn, average='macro', zero_division=0),
+        })
+
+    return pd.DataFrame(rows)
+
+def plot_metric_comparison(metrics_df):
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+
+    axes[0].plot(metrics_df["K"], metrics_df["Acuracia Manual"], marker='o', label='Manual')
+    axes[0].plot(metrics_df["K"], metrics_df["Acuracia Sklearn"], marker='o', label='Sklearn')
+    axes[0].set_title("Acuracia por K")
+    axes[0].set_xlabel("K")
+    axes[0].set_ylabel("Acuracia")
+
+    axes[1].plot(metrics_df["K"], metrics_df["Revocacao Manual"], marker='o', label='Manual')
+    axes[1].plot(metrics_df["K"], metrics_df["Revocacao Sklearn"], marker='o', label='Sklearn')
+    axes[1].set_title("Revocacao por K")
+    axes[1].set_xlabel("K")
+    axes[1].set_ylabel("Revocacao")
+
+    for ax in axes:
+        ax.set_xticks(metrics_df["K"])
+        ax.set_ylim(0.0, 1.05)
+        ax.grid(alpha=0.25)
+        ax.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+k_values = [1, 3, 5, 7]
+metrics_df = calculate_metrics(k_values)
+```
+
+## Integrantes
+
+::: {.slide-body}
+
+Gabriel Fagundes M. Sousa
+
+Hugo Dias Pontello
+
+**Curso**: Sistemas de Informação
+
+**Disciplina**: GCC128 - Inteligência Artificial
+
+:::
+
+---
+
+## O que é o modelo KNN?
+
+::: {.slide-body}
+
+KNN (K-Nearest Neighbors) é um classificador supervisionado simples e intuitivo. O algoritmo tem como **fluxo básico**:
+
+1. Armazenar os exemplos de treino.
+
+2. Calcular a distância do novo ponto para cada exemplo.
+
+3. Selecionar os K vizinhos mais próximos.
+
+4. Predizer pela maioria dos rótulos desses vizinhos.
+
+:::
+
+---
+
+## Implementação Manual
+
+::: {.slide-body}
+
+Na implementação do zero, fizemos exatamente o algoritmo clássico:
+
+- Distância euclidiana ponto a ponto.
+- Ordenação das distâncias.
+- Votação por contagem de classes.
+
+Essa abordagem é excelente para entender a lógica do método, mas tem como limitação a busca exaustiva, com custo $O(N \times D)$ por predição.
+
+:::
+
+---
+
+## Implementação Scikit-Learn
+
+::: {.slide-body}
+
+A classe KNeighborsClassifier usa código otimizado e integração eficiente com NumPy.
+
+Em comparação com a versão manual, ela reduz o overhead de loops em Python, permite estratégias de busca otimizadas e mantém a mesma lógica matemática do KNN.
+
+Referência do classificador:
+
+https://github.com/scikit-learn/scikit-learn/blob/fe2edb3cd/sklearn/neighbors/_classification.py#L44
+
+:::
+
+---
+
+## Otimizações de Busca
+
+::: {.slide-body}
+
+No Scikit-Learn, o parâmetro algorithm define como os vizinhos serão encontrados.
+
+| Algorithm | Ideia | Melhor cenário |
+|---|---|---|
+| `brute` | Calcula distância para todos os pontos | Dados pequenos |
+| `kd_tree` | Particiona o espaço por eixos | Baixa dimensionalidade |
+| `ball_tree` | Particiona por hiperesferas | Dimensão moderada/alta |
+| `auto` | Escolhe estratégia automaticamente | Uso geral |
+
+:::
+
+---
+
+## Impacto Prático
+
+::: {.slide-body}
+
+No dataset Iris temos 150 amostras e 4 atributos.
+
+Neste trabalho, a diferença de tempo entre brute, KD-Tree e Ball-Tree tende a ser pequena. Em bases muito maiores, KD-Tree e Ball-Tree passam a fazer diferença real, enquanto a acurácia entre implementação manual e Scikit-Learn permanece equivalente.
+
+:::
+
+---
+
+## Métricas: Acurácia e Revocação {.table-slide}
+
+::: {.slide-body}
+
+Além das matrizes de confusão, também avaliamos acurácia e revocação macro para K igual a 1, 3, 5 e 7.
+
+```{python}
+#| echo: false
+#| fig-align: center
+plot_metric_comparison(metrics_df)
+```
+
+:::
+
+---
+
+## Métricas: Acurácia e Revocação
+
+::: {.metric-table}
+
+```{python}
+#| echo: false
+metrics_df.round(4).style.hide(axis="index")
+```
+
+:::
+
+---
+
+## Resultados: Matrizes de Confusão (K = 1)
+
+Comparação entre KNN manual e Scikit-Learn:
+
+```{python}
+#| echo: false
+#| fig-align: center
+plot_confusion_matrices(1)
+```
+
+---
+
+## Resultados: Matrizes de Confusão (K = 3)
+
+Comparação entre KNN manual e Scikit-Learn:
+
+```{python}
+#| echo: false
+#| fig-align: center
+plot_confusion_matrices(3)
+```
+
+---
+
+## Resultados: Matrizes de Confusão (K = 5)
+
+Comparação entre KNN manual e Scikit-Learn:
+
+```{python}
+#| echo: false
+#| fig-align: center
+plot_confusion_matrices(5)
+```
+
+---
+
+## Resultados: Matrizes de Confusão (K = 7)
+
+Comparação entre KNN manual e Scikit-Learn:
+
+```{python}
+#| echo: false
+#| fig-align: center
+plot_confusion_matrices(7)
+```
+
+---
+
+## Conclusão
+
+::: {.slide-body}
+
+A implementação manual valida com clareza a lógica do KNN e cumpre muito bem o objetivo didático da atividade, sem distinção em nenhuma das métricas em relação à implementação do Scikit-Learn.
+
+Como mencionado anteriormente, no contexto do Iris, por ser uma base pequena, a diferença de tempo tende a ser discreta; contudo, em bases maiores, estruturas como KD-Tree e Ball-Tree passam a ter impacto importante na escalabilidade.
+
+:::

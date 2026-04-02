@@ -1,0 +1,93 @@
+/* Estilos básicos da apresentação Quarto */
+:root {
+    --bg-color: #f8fafc;
+    --text-color: #1f2937;
+    --muted-color: #4b5563;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+.reveal {
+    font-size: 30px;
+    color: var(--text-color);
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+    color: #0f172a;
+    margin-bottom: 0.35em;
+}
+
+.reveal p,
+.reveal li,
+.reveal td,
+.reveal th {
+    font-size: 0.86em;
+    line-height: 1.35;
+}
+
+.reveal .slides section.table-slide {
+    display: flex;
+    flex-direction: column;
+}
+
+.reveal .slides section.table-slide .metric-table {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 52px;
+}
+
+.reveal .slides section.table-slide .metric-table .cell,
+.reveal .slides section.table-slide .metric-table .cell-output,
+.reveal .slides section.table-slide .metric-table .cell-output-display {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.reveal .slides section.table-slide .metric-table table {
+    font-size: 0.72em;
+    margin: 0 auto;
+    width: auto;
+}
+
+.reveal .slides section.table-slide .metric-table th,
+.reveal .slides section.table-slide .metric-table td {
+    padding: 0.28em 0.5em;
+}
+
+.reveal .slide-number {
+    color: var(--muted-color);
+}
+
+/* Rodapé global em todos os slides */
+.reveal-viewport::before {
+    content: "Algoritmo KNN";
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    color: var(--muted-color);
+    font-size: 16px;
+    font-weight: 600;
+    z-index: 30;
+    transform: translateX(-95px);
+}
+
+.reveal-viewport::after {
+    content: "";
+    position: fixed;
+    left: 50%;
+    bottom: 11px;
+    width: 95px;
+    height: 34px;
+    background: url("assets/Logo UFLA - Colorida estilizada.png") no-repeat center / contain;
+    z-index: 30;
+    transform: translateX(36px);
+}

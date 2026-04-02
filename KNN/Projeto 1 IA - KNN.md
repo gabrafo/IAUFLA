@@ -1,5 +1,3 @@
-# Projeto 1 IA - KNN
-
 ## Contexto do projeto
 
 Este relatório descreve a solução desenvolvida para o Projeto 1 da disciplina de Inteligência Artificial da UFLA, com foco no algoritmo K-Nearest Neighbors (KNN). A proposta foi implementar o método de classificação de forma manual e, em paralelo, comparar o comportamento dessa implementação com a versão disponibilizada pela biblioteca scikit-learn, observando desempenho, qualidade das predições e aspectos de eficiência.
